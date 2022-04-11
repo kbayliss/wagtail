@@ -8,6 +8,7 @@ Wagtail ships with a variety of extra optional modules.
     :maxdepth: 2
 
     settings
+    settings_global
     forms/index
     sitemaps
     frontendcache
@@ -24,7 +25,13 @@ Wagtail ships with a variety of extra optional modules.
 :doc:`settings`
 ---------------
 
-Site-wide settings that are editable by administrators in the Wagtail admin.
+Site-specific settings that are editable by administrators in the Wagtail admin.
+
+
+:doc:`settings_global`
+----------------------
+
+Global settings (for all sites) that are editable by administrators in the Wagtail admin.
 
 
 :doc:`forms/index`
@@ -49,7 +56,6 @@ A module for automatically purging pages from a cache (Varnish, Squid, Cloudflar
 -------------------
 
 Provides a way of embedding Django URLconfs into pages.
-
 
 
 :doc:`modeladmin/index`
