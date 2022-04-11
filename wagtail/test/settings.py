@@ -74,6 +74,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "wagtail.test.context_processors.do_not_use_static_url",
                 "wagtail.contrib.settings.context_processors.settings",
+                "wagtail.contrib.settings_global.context_processors.global_settings",
             ],
             "debug": True,  # required in order to catch template errors
         },
@@ -90,6 +91,7 @@ TEMPLATES = [
                 "wagtail.admin.jinja2tags.userbar",
                 "wagtail.images.jinja2tags.images",
                 "wagtail.contrib.settings.jinja2tags.settings",
+                "wagtail.contrib.settings_global.jinja2tags.global_settings",
             ],
         },
     },
@@ -125,6 +127,7 @@ INSTALLED_APPS = [
     "wagtail.contrib.frontend_cache",
     "wagtail.contrib.search_promotions",
     "wagtail.contrib.settings",
+    "wagtail.contrib.settings_global",
     "wagtail.contrib.modeladmin",
     "wagtail.contrib.table_block",
     "wagtail.contrib.forms",

@@ -45,6 +45,10 @@ from wagtail.contrib.forms.models import (
 )
 from wagtail.contrib.forms.views import SubmissionsListView
 from wagtail.contrib.settings.models import BaseSetting, register_setting
+from wagtail.contrib.settings_global.models import (
+    BaseGlobalSetting,
+    register_global_setting,
+)
 from wagtail.contrib.sitemaps import Sitemap
 from wagtail.contrib.table_block.blocks import TableBlock
 from wagtail.documents import get_document_model
@@ -1283,8 +1287,27 @@ class TestSetting(BaseSetting):
     email = models.EmailField(max_length=50)
 
 
+@register_global_setting
+class TestGlobalSetting(BaseGlobalSetting):
+    title = models.CharField(max_length=100)
+    email = models.EmailField(max_length=50)
+
+
 @register_setting
 class ImportantPages(BaseSetting):
+    sign_up_page = models.ForeignKey(
+        "wagtailcore.Page", related_name="+", null=True, on_delete=models.SET_NULL
+    )
+    general_terms_page = models.ForeignKey(
+        "wagtailcore.Page", related_name="+", null=True, on_delete=models.SET_NULL
+    )
+    privacy_policy_page = models.ForeignKey(
+        "wagtailcore.Page", related_name="+", null=True, on_delete=models.SET_NULL
+    )
+
+
+@register_global_setting
+class ImportantPagesGlobalSetting(BaseGlobalSetting):
     sign_up_page = models.ForeignKey(
         "wagtailcore.Page", related_name="+", null=True, on_delete=models.SET_NULL
     )
@@ -1301,12 +1324,26 @@ class IconSetting(BaseSetting):
     pass
 
 
+@register_global_setting(icon="icon-setting-tag")
+class IconGlobalSetting(BaseGlobalSetting):
+    pass
+
+
 class NotYetRegisteredSetting(BaseSetting):
+    pass
+
+
+class NotYetRegisteredGlobalSetting(BaseGlobalSetting):
     pass
 
 
 @register_setting
 class FileUploadSetting(BaseSetting):
+    file = models.FileField()
+
+
+@register_global_setting
+class FileGlobalSetting(BaseGlobalSetting):
     file = models.FileField()
 
 
@@ -1546,7 +1583,20 @@ class PanelSettings(TestSetting):
     panels = [FieldPanel("title")]
 
 
+class PanelGlobalSettings(TestGlobalSetting):
+    panels = [FieldPanel("title")]
+
+
 class TabbedSettings(TestSetting):
+    edit_handler = TabbedInterface(
+        [
+            ObjectList([FieldPanel("title")], heading="First tab"),
+            ObjectList([FieldPanel("email")], heading="Second tab"),
+        ]
+    )
+
+
+class TabbedGlobalSettings(TestGlobalSetting):
     edit_handler = TabbedInterface(
         [
             ObjectList([FieldPanel("title")], heading="First tab"),
