@@ -1,14 +1,14 @@
 from django.test import TestCase
 from django.urls import reverse
 
-from wagtail.contrib.settings.registry import GenericSettingRegistry
+from wagtail.contrib.settings.registry import Registry
 from wagtail.test.testapp.models import NotYetRegisteredGenericSetting
 from wagtail.test.utils import WagtailTestUtils
 
 
 class GenericSettingRegisterTestCase(TestCase, WagtailTestUtils):
     def setUp(self):
-        self.registry = GenericSettingRegistry()
+        self.registry = Registry()
         self.login()
 
     def test_register(self):

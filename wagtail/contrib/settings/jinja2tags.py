@@ -102,7 +102,7 @@ def get_site_setting(context, model_string, use_default_site=False):
         site = Site.find_for_request(context["request"])
     else:
         raise RuntimeError(
-            "No request found in context, and use_default_site " "flag not set"
+            "No request found in context, and use_default_site flag not set"
         )
 
     # Sadly, WeakKeyDictionary can not implement __missing__, so we have to do

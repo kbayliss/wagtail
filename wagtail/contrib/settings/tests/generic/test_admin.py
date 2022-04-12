@@ -6,8 +6,8 @@ from django.utils.text import capfirst
 from wagtail import hooks
 from wagtail.admin.admin_url_finder import AdminURLFinder
 from wagtail.admin.panels import FieldPanel, ObjectList, TabbedInterface
-from wagtail.contrib.settings.registry import GenericSettingMenuItem
-from wagtail.contrib.settings_global.views import get_global_setting_edit_handler
+from wagtail.contrib.settings.registry import SettingMenuItem
+from wagtail.contrib.settings.views import get_setting_edit_handler
 from wagtail.test.testapp.models import (
     FileGenericSetting,
     IconGenericSetting,
@@ -51,14 +51,14 @@ class TestGenericSettingMenu(TestCase, WagtailTestUtils):
         )
 
     def test_menu_item_icon(self):
-        menu_item = GenericSettingMenuItem(
+        menu_item = SettingMenuItem(
             IconGenericSetting, icon="tag", classnames="test-class"
         )
         self.assertEqual(menu_item.icon_name, "tag")
         self.assertEqual(menu_item.classnames, "test-class")
 
     def test_menu_item_icon_fontawesome(self):
-        menu_item = GenericSettingMenuItem(
+        menu_item = SettingMenuItem(
             IconGenericSetting, icon="fa-suitcase", classnames="test-class"
         )
         self.assertEqual(menu_item.icon_name, "")
@@ -114,9 +114,7 @@ class TestGenericSettingCreateView(BaseTestGenericSettingView):
         self.assertEqual(setting.title, "Edited setting title")
 
         url_finder = AdminURLFinder(self.user)
-        expected_url = (
-            "/admin/global-settings/tests/testgenericsetting/%d/" % setting.pk
-        )
+        expected_url = "/admin/settings/tests/testgenericsetting/%d/" % setting.pk
         self.assertEqual(url_finder.get_edit_url(setting), expected_url)
 
     def test_file_upload_multipart(self):
@@ -200,17 +198,15 @@ class TestAdminPermission(TestCase, WagtailTestUtils):
             if permission in fn():
                 break
         else:
-            self.fail(
-                "Change permission for tests.generic.TestGenericSetting not registered"
-            )
+            self.fail("Change permission for tests.TestGenericSetting not registered")
 
 
 class TestEditHandlers(TestCase):
     def setUp(self):
-        get_global_setting_edit_handler.cache_clear()
+        get_setting_edit_handler.cache_clear()
 
     def test_default_model_introspection(self):
-        handler = get_global_setting_edit_handler(TestGenericSetting)
+        handler = get_setting_edit_handler(TestGenericSetting)
         self.assertIsInstance(handler, ObjectList)
         self.assertEqual(len(handler.children), 2)
         first = handler.children[0]
@@ -221,7 +217,7 @@ class TestEditHandlers(TestCase):
         self.assertEqual(second.field_name, "email")
 
     def test_with_custom_panels(self):
-        handler = get_global_setting_edit_handler(PanelGenericSettings)
+        handler = get_setting_edit_handler(PanelGenericSettings)
         self.assertIsInstance(handler, ObjectList)
         self.assertEqual(len(handler.children), 1)
         first = handler.children[0]
@@ -229,6 +225,6 @@ class TestEditHandlers(TestCase):
         self.assertEqual(first.field_name, "title")
 
     def test_with_custom_edit_handler(self):
-        handler = get_global_setting_edit_handler(TabbedGenericSettings)
+        handler = get_setting_edit_handler(TabbedGenericSettings)
         self.assertIsInstance(handler, TabbedInterface)
         self.assertEqual(len(handler.children), 2)

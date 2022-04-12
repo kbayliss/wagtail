@@ -37,7 +37,7 @@ class TestSiteSettingMenu(TestCase, WagtailTestUtils):
 
         self.assertContains(response, capfirst(TestSiteSetting._meta.verbose_name))
         self.assertContains(
-            response, reverse("wagtailsettings:edit", args=("tests", "testsetting"))
+            response, reverse("wagtailsettings:edit", args=("tests", "testsitesetting"))
         )
 
     def test_menu_item_no_permissions(self):
@@ -46,7 +46,7 @@ class TestSiteSettingMenu(TestCase, WagtailTestUtils):
 
         self.assertNotContains(response, TestSiteSetting._meta.verbose_name)
         self.assertNotContains(
-            response, reverse("wagtailsettings:edit", args=("tests", "testsetting"))
+            response, reverse("wagtailsettings:edit", args=("tests", "testsitesetting"))
         )
 
     def test_menu_item_icon(self):
@@ -110,7 +110,7 @@ class TestSiteSettingCreateView(BaseTestSiteSettingView):
         self.assertEqual(setting.email, "test@example.com")
 
         url_finder = AdminURLFinder(self.user)
-        expected_url = "/admin/settings/tests/testsetting/%d/" % default_site.pk
+        expected_url = "/admin/settings/tests/testsitesetting/%d/" % default_site.pk
         self.assertEqual(url_finder.get_edit_url(setting), expected_url)
 
     def test_file_upload_multipart(self):
@@ -164,7 +164,7 @@ class TestSiteSettingEditView(BaseTestSiteSettingView):
         self.assertEqual(setting.email, "test@example.com")
 
     def test_get_redirect_to_relevant_instance(self):
-        url = reverse("wagtailsettings:edit", args=("tests", "testsetting"))
+        url = reverse("wagtailsettings:edit", args=("tests", "testsitesetting"))
         default_site = Site.objects.get(is_default_site=True)
 
         response = self.client.get(url)
@@ -174,7 +174,7 @@ class TestSiteSettingEditView(BaseTestSiteSettingView):
 
     def test_get_redirect_to_relevant_instance_invalid(self):
         Site.objects.all().delete()
-        url = reverse("wagtailsettings:edit", args=("tests", "testsetting"))
+        url = reverse("wagtailsettings:edit", args=("tests", "testsitesetting"))
         response = self.client.get(url)
         self.assertRedirects(response, status_code=302, expected_url="/admin/")
 
@@ -194,9 +194,10 @@ class TestMultiSite(BaseTestSiteSettingView):
         """
         Should redirect to the setting for the default site.
         """
-        start_url = reverse("wagtailsettings:edit", args=["tests", "testsetting"])
+        start_url = reverse("wagtailsettings:edit", args=["tests", "testsitesetting"])
         dest_url = reverse(
-            "wagtailsettings:edit", args=["tests", "testsetting", self.default_site.pk]
+            "wagtailsettings:edit",
+            args=["tests", "testsitesetting", self.default_site.pk],
         )
         response = self.client.get(start_url, follow=True)
         self.assertRedirects(
@@ -208,9 +209,10 @@ class TestMultiSite(BaseTestSiteSettingView):
         Should redirect to the setting for the current site taken from the URL,
         by default
         """
-        start_url = reverse("wagtailsettings:edit", args=["tests", "testsetting"])
+        start_url = reverse("wagtailsettings:edit", args=["tests", "testsitesetting"])
         dest_url = reverse(
-            "wagtailsettings:edit", args=["tests", "testsetting", self.other_site.pk]
+            "wagtailsettings:edit",
+            args=["tests", "testsitesetting", self.other_site.pk],
         )
         response = self.client.get(
             start_url, follow=True, HTTP_HOST=self.other_site.hostname
@@ -226,7 +228,7 @@ class TestMultiSite(BaseTestSiteSettingView):
         self.default_site.is_default_site = False
         self.default_site.save()
 
-        start_url = reverse("wagtailsettings:edit", args=["tests", "testsetting"])
+        start_url = reverse("wagtailsettings:edit", args=["tests", "testsitesetting"])
         response = self.client.get(
             start_url, follow=True, HTTP_HOST="noneoftheabove.example.com"
         )
@@ -274,15 +276,15 @@ class TestMultiSite(BaseTestSiteSettingView):
 class TestAdminPermission(TestCase, WagtailTestUtils):
     def test_registered_permission(self):
         permission = Permission.objects.get_by_natural_key(
-            app_label="tests", model="testsetting", codename="change_testsetting"
+            app_label="tests",
+            model="testsitesetting",
+            codename="change_testsitesetting",
         )
         for fn in hooks.get_hooks("register_permissions"):
             if permission in fn():
                 break
         else:
-            self.fail(
-                "Change permission for tests.site_specific.TestSiteSetting not registered"
-            )
+            self.fail("Change permission for tests.TestSiteSetting not registered")
 
 
 class TestEditHandlers(TestCase):

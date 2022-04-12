@@ -49,7 +49,7 @@ def get_setting_edit_handler(model):
 
 
 def redirect_to_relevant_instance(request, app_name, model_name):
-    model = registry.get_by_natural_key(app_name, model_name)
+    model = get_model_from_url_params(app_name, model_name)
 
     if model.is_sites_aware:
         # We're dealing with a model that inherits from `BaseSiteSetting`.
@@ -72,8 +72,6 @@ def redirect_to_relevant_instance(request, app_name, model_name):
         )
     else:
         # We're dealing with a model that inherits from `BaseGenericSetting`.
-
-        model = get_model_from_url_params(app_name, model_name)
         return redirect(
             "wagtailsettings:edit",
             app_name,

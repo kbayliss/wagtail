@@ -9,7 +9,7 @@ class GenericSettingsTestMixin:
         self.default_site = Site.objects.get(is_default_site=True)
         self.root_page = self.default_site.root_page
         self.other_root_page = Page(title="Other Root")
-        self.default_generic_settings = TestGenericSetting.objects.create(
+        self.default_settings = TestGenericSetting.objects.create(
             title="Default GenericSettings title", email="email@example.com"
         )
 
