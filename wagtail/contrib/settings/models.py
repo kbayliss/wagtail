@@ -4,6 +4,7 @@ from django.db import models
 
 from wagtail.coreutils import InvokeViaAttributeShortcut
 from wagtail.models import Site
+from wagtail.utils.deprecation import RemovedInWagtail50Warning
 
 from .registry import register_setting
 
@@ -171,9 +172,11 @@ class BaseSetting(BaseSiteSetting):
     def __init__(self, *args, **kwargs):
         warnings.warn(
             (
-                "Site-specific settings should now inherit from "
-                "`BaseSiteSetting`, as `BaseSetting` will soon be deprecated."
+                "wagtail.contrib.settings.models.BaseSetting "
+                "is obsolete and should be replaced by "
+                "wagtail.contrib.settings.models.BaseSiteSetting"
             ),
-            PendingDeprecationWarning,
+            category=RemovedInWagtail50Warning,
+            stacklevel=2,
         )
         return super().__init__(self, *args, **kwargs)

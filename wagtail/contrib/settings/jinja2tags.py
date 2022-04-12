@@ -1,3 +1,4 @@
+import warnings
 from weakref import WeakKeyDictionary
 
 import jinja2
@@ -7,6 +8,7 @@ from jinja2.ext import Extension
 
 from wagtail.contrib.settings.registry import registry
 from wagtail.models import Site
+from wagtail.utils.deprecation import RemovedInWagtail50Warning
 
 # Settings are cached per template context, to prevent excessive database
 # lookups. The cached settings are disposed of once the template context is no
@@ -143,6 +145,29 @@ class SiteSettingsExtension(Extension):
 
 
 site_settings = SiteSettingsExtension
+
+
+class SettingsExtension(Extension):
+    def __init__(self, environment):
+        super().__init__(environment)
+        warnings.warn(
+            (
+                "wagtail.contrib.settings.jinja2tags.settings "
+                "is obsolete and should be replaced by "
+                "wagtail.contrib.settings.jinja2tags.site_settings"
+            ),
+            category=RemovedInWagtail50Warning,
+            stacklevel=2,
+        )
+
+        self.environment.globals.update(
+            {
+                "settings": get_site_setting,
+            }
+        )
+
+
+settings = SettingsExtension
 
 
 class GenericSettingsExtension(Extension):

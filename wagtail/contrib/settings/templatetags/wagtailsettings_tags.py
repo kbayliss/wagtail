@@ -1,7 +1,10 @@
+import warnings
+
 from django.template import Library, Node
 from django.template.defaulttags import token_kwargs
 
 from wagtail.models import Site
+from wagtail.utils.deprecation import RemovedInWagtail50Warning
 
 from ..context_processors import GenericSettingProxy, SiteSettingProxy
 
@@ -62,3 +65,24 @@ def get_generic_settings(parser, token):
         bits = bits[:-2]
     kwargs = token_kwargs(bits, parser) if bits else {}
     return GenericSettingNode(kwargs, target_var)
+
+
+@register.tag
+def get_settings(parser, token):
+    warnings.warn(
+        (
+            "wagtail.settings.contrib.wagtailsettings_tags.get_settings "
+            "is obsolete and should be replaced by "
+            "wagtail.settings.contrib.wagtailsettings_tags.get_site_settings"
+        ),
+        category=RemovedInWagtail50Warning,
+        stacklevel=2,
+    )
+
+    bits = token.split_contents()[1:]
+    target_var = "settings"
+    if len(bits) >= 2 and bits[-2] == "as":
+        target_var = bits[-1]
+        bits = bits[:-2]
+    kwargs = token_kwargs(bits, parser) if bits else {}
+    return SiteSettingNode(kwargs, target_var)
