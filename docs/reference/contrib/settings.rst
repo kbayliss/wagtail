@@ -18,15 +18,15 @@ To use these settings, you must add ``wagtail.contrib.settings`` to your ``INSTA
 Defining settings
 =================
 
-Create a model that inherits from ``BaseSetting``, and register it using the ``register_setting`` decorator:
+Create a model that inherits from ``BaseSiteSetting``, and register it using the ``register_setting`` decorator:
 
 .. code-block:: python
 
     from django.db import models
-    from wagtail.contrib.settings.models import BaseSetting, register_setting
+    from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 
     @register_setting
-    class SocialMediaSettings(BaseSetting):
+    class SocialMediaSettings(BaseSiteSetting):
         facebook = models.URLField(
             help_text='Your Facebook page URL')
         instagram = models.CharField(
@@ -49,7 +49,7 @@ Settings use edit handlers much like the rest of Wagtail.  Add a ``panels`` sett
 .. code-block:: python
 
     @register_setting
-    class ImportantPages(BaseSetting):
+    class ImportantPages(BaseSiteSetting):
         donate_page = models.ForeignKey(
             'wagtailcore.Page', null=True, on_delete=models.SET_NULL, related_name='+')
         sign_up_page = models.ForeignKey(
@@ -68,7 +68,7 @@ with a custom ``edit_handler`` attribute:
     from wagtail.admin.panels import TabbedInterface, ObjectList
 
     @register_setting
-    class MySettings(BaseSetting):
+    class MySettings(BaseSiteSetting):
         # ...
         first_tab_panels = [
             FieldPanel('field_1'),
@@ -93,7 +93,7 @@ You can add an icon to the menu by passing an 'icon' argument to the ``register_
 .. code-block:: python
 
     @register_setting(icon='placeholder')
-    class SocialMediaSettings(BaseSetting):
+    class SocialMediaSettings(BaseSiteSetting):
         class Meta:
             verbose_name = 'social media accounts'
         ...
@@ -108,7 +108,7 @@ Settings are designed to be used both in Python code, and in templates.
 Using in Python
 ---------------
 
-If you require access to a setting in a view, the :func:`~wagtail.contrib.settings.models.BaseSetting.for_request` method allows you to retrieve the relevant settings for the current request:
+If you require access to a setting in a view, the :func:`~wagtail.contrib.settings.models.BaseSiteSetting.for_request` method allows you to retrieve the relevant settings for the current request:
 
 .. code-block:: python
 
@@ -116,7 +116,7 @@ If you require access to a setting in a view, the :func:`~wagtail.contrib.settin
         social_media_settings = SocialMediaSettings.for_request(request)
         ...
 
-In places where the request is unavailable, but you know the ``Site`` you wish to retrieve settings for, you can use :func:`~wagtail.contrib.settings.models.BaseSetting.for_site` instead:
+In places where the request is unavailable, but you know the ``Site`` you wish to retrieve settings for, you can use :func:`~wagtail.contrib.settings.models.BaseSiteSetting.for_site` instead:
 
 .. code-block:: python
 
@@ -152,12 +152,12 @@ Then access the settings through ``{{ settings }}``:
 
 .. note:: Replace ``app_label`` with the label of the app containing your settings model.
 
-If you are not in a ``RequestContext``, then context processors will not have run, and the ``settings`` variable will not be available. To get the ``settings``, use the provided ``{% get_settings %}`` template tag. If a ``request`` is in the template context, but for some reason it is not a ``RequestContext``, just use ``{% get_settings %}``:
+If you are not in a ``RequestContext``, then context processors will not have run, and the ``settings`` variable will not be available. To get the ``settings``, use the provided ``{% get_site_settings %}`` template tag. If a ``request`` is in the template context, but for some reason it is not a ``RequestContext``, just use ``{% get_site_settings %}``:
 
 .. code-block:: html+django
 
     {% load wagtailsettings_tags %}
-    {% get_settings %}
+    {% get_site_settings %}
     {{ settings.app_label.SocialMediaSettings.instagram }}
 
 If there is no ``request`` available in the template at all, you can use the settings for the default Wagtail site instead:
@@ -165,18 +165,18 @@ If there is no ``request`` available in the template at all, you can use the set
 .. code-block:: html+django
 
     {% load wagtailsettings_tags %}
-    {% get_settings use_default_site=True %}
+    {% get_site_settings use_default_site=True %}
     {{ settings.app_label.SocialMediaSettings.instagram }}
 
 .. note:: You can not reliably get the correct settings instance for the current site from this template tag if the request object is not available. This is only relevant for multisite instances of Wagtail.
 
 By default, the tag will create or update a ``settings`` variable in the context. If you want to
-assign to a different context variable instead, use ``{% get_settings as other_variable_name %}``:
+assign to a different context variable instead, use ``{% get_site_settings as other_variable_name %}``:
 
 .. code-block:: html+django
 
     {% load wagtailsettings_tags %}
-    {% get_settings as wagtail_settings %}
+    {% get_site_settings as wagtail_settings %}
     {{ wagtail_settings.app_label.SocialMediaSettings.instagram }}
 
 .. _settings_tag_jinja2:
@@ -252,7 +252,7 @@ following shows how ``select_related`` can be set to improve efficiency:
     :emphasize-lines: 4,5
 
     @register_setting
-    class ImportantPages(BaseSetting):
+    class ImportantPages(BaseSiteSetting):
 
         # Fetch these pages when looking up ImportantPages for or a site
         select_related = ["donate_page", "sign_up_page"]

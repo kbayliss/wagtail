@@ -44,7 +44,7 @@ class SettingMenuItem(MenuItem):
         return user_can_edit_setting_type(request.user, self.model)
 
 
-class SettingsAdminURLFinder(ModelAdminURLFinder):
+class SiteSettingAdminURLFinder(ModelAdminURLFinder):
     def construct_edit_url(self, instance):
         return reverse(
             "wagtailsettings:edit",
@@ -52,6 +52,18 @@ class SettingsAdminURLFinder(ModelAdminURLFinder):
                 self.model._meta.app_label,
                 self.model._meta.model_name,
                 instance.site_id,
+            ],
+        )
+
+
+class GenericSettingAdminURLFinder(ModelAdminURLFinder):
+    def construct_edit_url(self, instance):
+        return reverse(
+            "wagtailsettings:edit",
+            args=[
+                self.model._meta.app_label,
+                self.model._meta.model_name,
+                instance.id,
             ],
         )
 
@@ -81,11 +93,20 @@ class Registry(list):
 
         # Register an admin URL finder
         permission_policy = ModelPermissionPolicy(model)
-        finder_class = type(
-            "_SettingsAdminURLFinder",
-            (SettingsAdminURLFinder,),
-            {"model": model, "permission_policy": permission_policy},
-        )
+
+        if model.is_sites_aware:
+            finder_class = type(
+                "_SiteSettingAdminURLFinder",
+                (SiteSettingAdminURLFinder,),
+                {"model": model, "permission_policy": permission_policy},
+            )
+        else:
+            finder_class = type(
+                "_GenericSettingAdminURLFinder",
+                (GenericSettingAdminURLFinder,),
+                {"model": model, "permission_policy": permission_policy},
+            )
+
         register_admin_url_finder(model, finder_class)
 
         return model

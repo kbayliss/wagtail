@@ -1,3 +1,5 @@
+import warnings
+
 from django.db import models
 
 from wagtail.coreutils import InvokeViaAttributeShortcut
@@ -5,25 +7,27 @@ from wagtail.models import Site
 
 from .registry import register_setting
 
-__all__ = ["BaseSetting", "register_setting"]
+__all__ = [
+    "BaseSiteSetting",
+    "BaseSetting",  # Deprecated
+    "BaseGenericSetting",
+    "register_setting",
+]
 
 
-class BaseSetting(models.Model):
+class AbstractSetting(models.Model):
     """
     The abstract base model for settings. Subclasses must be registered using
     :func:`~wagtail.contrib.settings.registry.register_setting`
     """
 
-    # Override to fetch ForeignKey values in the same query when
-    # retrieving settings via for_site()
-    select_related = None
-
-    site = models.OneToOneField(
-        Site, unique=True, db_index=True, editable=False, on_delete=models.CASCADE
-    )
-
     class Meta:
         abstract = True
+
+    # Override to fetch ForeignKey values in the same query when
+    # retrieving settings (e.g. via `for_request()`)
+    select_related = None
+    is_sites_aware: bool = False
 
     @classmethod
     def base_queryset(cls):
@@ -43,15 +47,6 @@ class BaseSetting(models.Model):
         if cls.select_related is not None:
             queryset = queryset.select_related(*cls.select_related)
         return queryset
-
-    @classmethod
-    def for_site(cls, site):
-        """
-        Get or create an instance of this setting for the site.
-        """
-        queryset = cls.base_queryset()
-        instance, created = queryset.get_or_create(site=site)
-        return instance
 
     @classmethod
     def for_request(cls, request):
@@ -117,5 +112,68 @@ class BaseSetting(models.Model):
         self._page_url_cache[attribute_name] = url
         return url
 
+
+class BaseSiteSetting(AbstractSetting):
+    site = models.OneToOneField(
+        Site, unique=True, db_index=True, editable=False, on_delete=models.CASCADE
+    )
+
+    class Meta:
+        abstract = True
+
+    is_sites_aware: bool = True
+
+    @classmethod
+    def for_site(cls, site):
+        """
+        Get or create an instance of this setting for the site.
+        """
+        queryset = cls.base_queryset()
+        instance, created = queryset.get_or_create(site=site)
+        return instance
+
     def __str__(self):
         return "%s for %s" % (self._meta.verbose_name.capitalize(), self.site)
+
+
+class BaseGenericSetting(AbstractSetting):
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def for_request(cls, request):
+        """
+        Get or create an instance of this model for the request,
+        and cache the result on the request for faster repeat access.
+        """
+        attr_name = cls.get_cache_attr_name()
+        if hasattr(request, attr_name):
+            return getattr(request, attr_name)
+
+        # Try to get first instance of this model.
+        instance = cls.base_queryset().first()
+        if instance is None:
+            # Instance doesn't exist yet - create it.
+            instance = cls.base_queryset().create()
+
+        # Stash request for later (see `get_page_url`)
+        instance._request = request
+
+        # Cache instance to avoid subsequent queries for this request.
+        setattr(request, attr_name, instance)
+        return instance
+
+    def __str__(self):
+        return self._meta.verbose_name.capitalize()
+
+
+class BaseSetting(BaseSiteSetting):
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            (
+                "Site-specific settings should now inherit from "
+                "`BaseSiteSetting`, as `BaseSetting` will soon be deprecated."
+            ),
+            PendingDeprecationWarning,
+        )
+        return super().__init__(self, *args, **kwargs)
